@@ -1,0 +1,28 @@
+{
+	"schemaVersion": 1,
+	"id": "xiaonuoclean",
+	"version": "${version}",
+	"name": "XiaoNuoClean",
+	"description": "定时清理服务器掉落物，支持清理间隔、预警倒计时和物品白名单配置。",
+	"authors": [
+		"XiaoNuoClean"
+	],
+	"contact": {},
+	"license": "CC0-1.0",
+	"icon": "assets/xiaonuoclean/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.xiaonuoclean.XiaoNuoClean"
+		],
+		"client": [
+			"com.xiaonuoclean.client.XiaoNuoCleanClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.1.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
