@@ -40,4 +40,6 @@ XiaoNuoClean 是一个 Minecraft Java 版 Fabric 服务端 MOD，用于定时清
 
 ## License
 
-This project is available under the CC0 license.
+本项目使用 GNU General Public License v3.0 协议开源。
+
+详见 [LICENSE](LICENSE)。
