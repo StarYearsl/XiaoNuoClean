@@ -2,7 +2,6 @@ package com.xiaonuoclean.cleanup;
 
 import com.xiaonuoclean.config.CleanConfig;
 import com.xiaonuoclean.config.CleanConfigManager;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 
@@ -15,10 +14,6 @@ public class CleanupScheduler {
         this.configManager = configManager;
         this.cleanupService = cleanupService;
         this.countdown = new CleanupCountdown(configManager.config());
-    }
-
-    public void register() {
-        ServerTickEvents.END_SERVER_TICK.register(this::tick);
     }
 
     public void refresh() {
@@ -36,7 +31,7 @@ public class CleanupScheduler {
         return cleanedCount;
     }
 
-    private void tick(MinecraftServer server) {
+    public void tick(MinecraftServer server) {
         CleanConfig config = configManager.config();
         countdown.tick(event -> {
             if (event instanceof CleanupCountdown.Warning warning) {

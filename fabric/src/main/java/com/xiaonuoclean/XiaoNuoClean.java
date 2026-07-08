@@ -5,6 +5,8 @@ import com.xiaonuoclean.cleanup.ItemCleanupService;
 import com.xiaonuoclean.command.XiaoNuoCleanCommand;
 import com.xiaonuoclean.config.CleanConfigManager;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 
 import net.minecraft.resources.Identifier;
@@ -27,9 +29,10 @@ public class XiaoNuoClean implements ModInitializer {
 
 		ItemCleanupService cleanupService = new ItemCleanupService();
 		CleanupScheduler scheduler = new CleanupScheduler(configManager, cleanupService);
-		scheduler.register();
+		ServerTickEvents.END_SERVER_TICK.register(scheduler::tick);
 
-		new XiaoNuoCleanCommand(configManager, scheduler).register();
+		XiaoNuoCleanCommand command = new XiaoNuoCleanCommand(configManager, scheduler);
+		CommandRegistrationCallback.EVENT.register(command::register);
 
 		LOGGER.info("XiaoNuoClean initialized. Config path: {}", configPath);
 	}

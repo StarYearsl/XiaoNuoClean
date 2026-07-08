@@ -4,10 +4,19 @@
 # against bad commits.
 
 name: build
-on: [pull_request, push]
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+    inputs:
+      build_neoforge:
+        description: 'Build the NeoForge jar as well'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
-  build:
+  fabric:
     runs-on: ubuntu-24.04
     steps:
       - name: checkout repository
@@ -26,5 +35,32 @@ jobs:
       - name: capture build artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: Artifacts
-          path: build/libs/
+          name: Fabric Artifacts
+          path: |
+            fabric/build/libs/*.jar
+            !fabric/build/libs/*-sources.jar
+
+  neoforge:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_neoforge }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: build neoforge
+        run: ./gradlew :neoforge:build -PincludeNeoForge=true --no-parallel --max-workers=1
+      - name: capture neoforge artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: NeoForge Artifacts
+          path: |
+            neoforge/build/libs/*.jar
+            !neoforge/build/libs/*-sources.jar

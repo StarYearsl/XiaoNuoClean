@@ -1,12 +1,12 @@
 package com.xiaonuoclean.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.xiaonuoclean.cleanup.CleanupScheduler;
 import com.xiaonuoclean.config.CleanConfig;
 import com.xiaonuoclean.config.CleanConfigManager;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -31,12 +31,18 @@ public class XiaoNuoCleanCommand {
         this.scheduler = scheduler;
     }
 
-    public void register() {
-        CommandRegistrationCallback.EVENT.register(this::registerCommand);
+    public static List<String> rootCommandNames() {
+        return List.of("xiaonuoclean", "xnc");
     }
 
-    private void registerCommand(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context, Commands.CommandSelection selection) {
-        dispatcher.register(Commands.literal("xiaonuoclean")
+    public void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context, Commands.CommandSelection selection) {
+        for (String rootCommandName : rootCommandNames()) {
+            dispatcher.register(commandRoot(rootCommandName, context));
+        }
+    }
+
+    private LiteralArgumentBuilder<CommandSourceStack> commandRoot(String name, CommandBuildContext context) {
+        return Commands.literal(name)
                 .requires(XiaoNuoCleanCommand::canUse)
                 .then(Commands.literal("status")
                         .executes(command -> status(command.getSource())))
@@ -73,8 +79,7 @@ public class XiaoNuoCleanCommand {
                                                 itemId(command, "item")
                                         ))))
                         .then(Commands.literal("list")
-                                .executes(command -> listWhitelist(command.getSource()))))
-        );
+                                .executes(command -> listWhitelist(command.getSource()))));
     }
 
     private static boolean canUse(CommandSourceStack source) {

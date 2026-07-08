@@ -4,10 +4,19 @@ pluginManagement {
 			name = 'Fabric'
 			url = 'https://maven.fabricmc.net/'
 		}
+		maven {
+			name = 'NeoForged'
+			url = 'https://maven.neoforged.net/releases'
+		}
 		mavenCentral()
 		gradlePluginPortal()
 	}
 }
 
-// Should match your modid
 rootProject.name = 'xiaonuoclean'
+
+include 'common', 'fabric'
+
+if (providers.gradleProperty('includeNeoForge').map { it.toBoolean() }.getOrElse(false)) {
+	include 'neoforge'
+}
