@@ -8,12 +8,6 @@ on:
   pull_request:
   push:
   workflow_dispatch:
-    inputs:
-      build_neoforge:
-        description: 'Build the NeoForge jar as well'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   fabric:
@@ -41,7 +35,6 @@ jobs:
             !fabric/build/libs/*-sources.jar
 
   neoforge:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_neoforge }}
     runs-on: ubuntu-24.04
     steps:
       - name: checkout repository

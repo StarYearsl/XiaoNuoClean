@@ -9,8 +9,6 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 
-import net.minecraft.resources.Identifier;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +33,5 @@ public class XiaoNuoClean implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register(command::register);
 
 		LOGGER.info("XiaoNuoClean initialized. Config path: {}", configPath);
-	}
-
-	public static Identifier id(String path) {
-		return Identifier.fromNamespaceAndPath(MOD_ID, path);
 	}
 }

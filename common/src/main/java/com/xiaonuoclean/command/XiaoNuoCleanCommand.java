@@ -195,7 +195,7 @@ public class XiaoNuoCleanCommand {
         return 1;
     }
 
-    private static List<Integer> parseWarningSeconds(String secondsText) {
+    static List<Integer> parseWarningSeconds(String secondsText) {
         List<Integer> warnings = new ArrayList<>();
 
         for (String part : secondsText.trim().split("\\s+")) {
