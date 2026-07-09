@@ -1,0 +1,17 @@
+{
+  "cleanup.warning": "[小诺清理] 将在 {seconds} 秒后清理掉落物。",
+  "cleanup.cleaned": "[小诺清理] 本次共清理了 {count} 个掉落物。",
+  "command.status": "[小诺清理] 清理间隔: {intervalSeconds} 秒，距离下次清理: {remainingSeconds} 秒，提示秒数: {warningSeconds}，白名单数量: {whitelistCount}",
+  "command.reload": "[小诺清理] 配置已重载。",
+  "command.clean": "[小诺清理] 已手动清理 {count} 个掉落物。",
+  "command.interval.set": "[小诺清理] 清理间隔已设置为 {seconds} 秒。",
+  "command.warnings.invalid": "[小诺清理] 至少需要提供一个有效的正整数提示秒数。",
+  "command.warnings.set": "[小诺清理] 提示秒数已设置为 {warningSeconds}。",
+  "command.whitelist.player_only": "[小诺清理] 该指令只能由游戏内管理员玩家执行。",
+  "command.whitelist.empty_hand": "[小诺清理] 主手没有物品。",
+  "command.whitelist.added": "[小诺清理] 已添加白名单物品: {item}",
+  "command.whitelist.removed": "[小诺清理] 已移除白名单物品: {item}",
+  "command.whitelist.missing": "[小诺清理] 白名单中没有物品: {item}",
+  "command.whitelist.empty": "[小诺清理] 白名单为空。",
+  "command.whitelist.list": "[小诺清理] 白名单: {items}"
+}

@@ -4,6 +4,8 @@ import com.xiaonuoclean.cleanup.CleanupScheduler;
 import com.xiaonuoclean.cleanup.ItemCleanupService;
 import com.xiaonuoclean.command.XiaoNuoCleanCommand;
 import com.xiaonuoclean.config.CleanConfigManager;
+import com.xiaonuoclean.config.XiaoNuoCleanPaths;
+import com.xiaonuoclean.i18n.LanguageManager;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -15,8 +17,6 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
-
 @Mod(XiaoNuoCleanNeoForge.MOD_ID)
 public class XiaoNuoCleanNeoForge {
     public static final String MOD_ID = "xiaonuoclean";
@@ -27,18 +27,22 @@ public class XiaoNuoCleanNeoForge {
     private final XiaoNuoCleanCommand command;
 
     public XiaoNuoCleanNeoForge(IEventBus modBus, ModContainer modContainer) {
-        Path configPath = FMLPaths.CONFIGDIR.get().resolve(MOD_ID + ".json");
-        CleanConfigManager configManager = new CleanConfigManager(configPath);
+        XiaoNuoCleanPaths paths = XiaoNuoCleanPaths.resolve(FMLPaths.CONFIGDIR.get());
+
+        LanguageManager languageManager = new LanguageManager(paths.languageDirectory());
+        languageManager.reload();
+
+        CleanConfigManager configManager = new CleanConfigManager(paths.configPath());
         configManager.load();
 
         ItemCleanupService cleanupService = new ItemCleanupService();
-        this.scheduler = new CleanupScheduler(configManager, cleanupService);
-        this.command = new XiaoNuoCleanCommand(configManager, scheduler);
+        this.scheduler = new CleanupScheduler(configManager, cleanupService, languageManager);
+        this.command = new XiaoNuoCleanCommand(configManager, scheduler, languageManager);
 
         NeoForge.EVENT_BUS.register(this);
 
         LOGGER.debug("NeoForge mod bus: {}, container: {}", modBus, modContainer);
-        LOGGER.info("XiaoNuoClean initialized for NeoForge. Config path: {}", configPath);
+        LOGGER.info("XiaoNuoClean initialized for NeoForge. Config path: {}", paths.configPath());
     }
 
     @SubscribeEvent

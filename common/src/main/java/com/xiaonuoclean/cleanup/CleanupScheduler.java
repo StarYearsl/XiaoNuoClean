@@ -2,17 +2,20 @@ package com.xiaonuoclean.cleanup;
 
 import com.xiaonuoclean.config.CleanConfig;
 import com.xiaonuoclean.config.CleanConfigManager;
+import com.xiaonuoclean.i18n.LanguageManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 
 public class CleanupScheduler {
     private final CleanConfigManager configManager;
     private final ItemCleanupService cleanupService;
+    private final LanguageManager languageManager;
     private CleanupCountdown countdown;
 
-    public CleanupScheduler(CleanConfigManager configManager, ItemCleanupService cleanupService) {
+    public CleanupScheduler(CleanConfigManager configManager, ItemCleanupService cleanupService, LanguageManager languageManager) {
         this.configManager = configManager;
         this.cleanupService = cleanupService;
+        this.languageManager = languageManager;
         this.countdown = new CleanupCountdown(configManager.config());
     }
 
@@ -25,8 +28,9 @@ public class CleanupScheduler {
     }
 
     public int cleanNow(MinecraftServer server) {
-        int cleanedCount = cleanupService.clean(server, configManager.config());
-        broadcast(server, CleanupMessages.cleanedCount(cleanedCount));
+        CleanConfig config = configManager.config();
+        int cleanedCount = cleanupService.clean(server, config);
+        broadcast(server, CleanupMessages.cleanedCount(languageManager, config.language(), cleanedCount));
         countdown.reset(configManager.config());
         return cleanedCount;
     }
@@ -35,12 +39,12 @@ public class CleanupScheduler {
         CleanConfig config = configManager.config();
         countdown.tick(event -> {
             if (event instanceof CleanupCountdown.Warning warning) {
-                broadcast(server, CleanupMessages.warning(warning.remainingSeconds()));
+                broadcast(server, CleanupMessages.warning(languageManager, config.language(), warning.remainingSeconds()));
             }
 
             if (event instanceof CleanupCountdown.Cleanup) {
                 int cleanedCount = cleanupService.clean(server, config);
-                broadcast(server, CleanupMessages.cleanedCount(cleanedCount));
+                broadcast(server, CleanupMessages.cleanedCount(languageManager, config.language(), cleanedCount));
             }
         });
     }

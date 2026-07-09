@@ -7,6 +7,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.xiaonuoclean.cleanup.CleanupScheduler;
 import com.xiaonuoclean.config.CleanConfig;
 import com.xiaonuoclean.config.CleanConfigManager;
+import com.xiaonuoclean.i18n.LanguageManager;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -21,14 +22,17 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class XiaoNuoCleanCommand {
     private final CleanConfigManager configManager;
     private final CleanupScheduler scheduler;
+    private final LanguageManager languageManager;
 
-    public XiaoNuoCleanCommand(CleanConfigManager configManager, CleanupScheduler scheduler) {
+    public XiaoNuoCleanCommand(CleanConfigManager configManager, CleanupScheduler scheduler, LanguageManager languageManager) {
         this.configManager = configManager;
         this.scheduler = scheduler;
+        this.languageManager = languageManager;
     }
 
     public static List<String> rootCommandNames() {
@@ -93,61 +97,63 @@ public class XiaoNuoCleanCommand {
 
     private int status(CommandSourceStack source) {
         CleanConfig config = configManager.config();
-        source.sendSuccess(() -> Component.literal(
-                "[小诺清理] 清理间隔: " + config.intervalSeconds() + " 秒，距离下次清理: "
-                        + scheduler.remainingSeconds() + " 秒，提示秒数: " + config.warningSeconds()
-                        + "，白名单数量: " + config.whitelist().size()
-        ), false);
+        source.sendSuccess(() -> translated("command.status", Map.of(
+                "intervalSeconds", config.intervalSeconds(),
+                "remainingSeconds", scheduler.remainingSeconds(),
+                "warningSeconds", config.warningSeconds(),
+                "whitelistCount", config.whitelist().size()
+        )), false);
         return 1;
     }
 
     private int reload(CommandSourceStack source) {
         configManager.load();
+        languageManager.reload();
         scheduler.refresh();
-        source.sendSuccess(() -> Component.literal("[小诺清理] 配置已重载。"), false);
+        source.sendSuccess(() -> translated("command.reload"), false);
         return 1;
     }
 
     private int clean(CommandSourceStack source) {
         int cleanedCount = scheduler.cleanNow(source.getServer());
-        source.sendSuccess(() -> Component.literal("[小诺清理] 已手动清理 " + cleanedCount + " 个掉落物。"), false);
+        source.sendSuccess(() -> translated("command.clean", Map.of("count", cleanedCount)), false);
         return 1;
     }
 
     private int setInterval(CommandSourceStack source, int seconds) {
         CleanConfig current = configManager.config();
-        CleanConfig updated = new CleanConfig(seconds, current.warningSeconds(), current.whitelist()).normalize();
+        CleanConfig updated = new CleanConfig(current.language(), seconds, current.warningSeconds(), current.whitelist()).normalize();
         configManager.save(updated);
         scheduler.refresh();
-        source.sendSuccess(() -> Component.literal("[小诺清理] 清理间隔已设置为 " + updated.intervalSeconds() + " 秒。"), true);
+        source.sendSuccess(() -> translated("command.interval.set", Map.of("seconds", updated.intervalSeconds())), true);
         return 1;
     }
 
     private int setWarnings(CommandSourceStack source, String secondsText) {
         List<Integer> warnings = parseWarningSeconds(secondsText);
         if (warnings.isEmpty()) {
-            source.sendFailure(Component.literal("[小诺清理] 至少需要提供一个有效的正整数提示秒数。"));
+            source.sendFailure(translated("command.warnings.invalid"));
             return 0;
         }
 
         CleanConfig current = configManager.config();
-        CleanConfig updated = new CleanConfig(current.intervalSeconds(), warnings, current.whitelist()).normalize();
+        CleanConfig updated = new CleanConfig(current.language(), current.intervalSeconds(), warnings, current.whitelist()).normalize();
         configManager.save(updated);
         scheduler.refresh();
-        source.sendSuccess(() -> Component.literal("[小诺清理] 提示秒数已设置为 " + updated.warningSeconds() + "。"), true);
+        source.sendSuccess(() -> translated("command.warnings.set", Map.of("warningSeconds", updated.warningSeconds())), true);
         return 1;
     }
 
     private int setWhitelistFromMainHand(CommandSourceStack source) {
         ServerPlayer player = source.getPlayer();
         if (player == null) {
-            source.sendFailure(Component.literal("[小诺清理] 该指令只能由游戏内管理员玩家执行。"));
+            source.sendFailure(translated("command.whitelist.player_only"));
             return 0;
         }
 
         ItemStack stack = player.getMainHandItem();
         if (stack.isEmpty()) {
-            source.sendFailure(Component.literal("[小诺清理] 主手没有物品。"));
+            source.sendFailure(translated("command.whitelist.empty_hand"));
             return 0;
         }
 
@@ -163,10 +169,10 @@ public class XiaoNuoCleanCommand {
             whitelist.add(itemId);
         }
 
-        CleanConfig updated = new CleanConfig(current.intervalSeconds(), current.warningSeconds(), whitelist).normalize();
+        CleanConfig updated = new CleanConfig(current.language(), current.intervalSeconds(), current.warningSeconds(), whitelist).normalize();
         configManager.save(updated);
         scheduler.refresh();
-        source.sendSuccess(() -> Component.literal("[小诺清理] 已添加白名单物品: " + itemId), true);
+        source.sendSuccess(() -> translated("command.whitelist.added", Map.of("item", itemId)), true);
         return 1;
     }
 
@@ -175,24 +181,33 @@ public class XiaoNuoCleanCommand {
         List<String> whitelist = current.mutableWhitelist();
         boolean removed = whitelist.remove(itemId);
 
-        CleanConfig updated = new CleanConfig(current.intervalSeconds(), current.warningSeconds(), whitelist).normalize();
+        CleanConfig updated = new CleanConfig(current.language(), current.intervalSeconds(), current.warningSeconds(), whitelist).normalize();
         configManager.save(updated);
         scheduler.refresh();
 
         if (removed) {
-            source.sendSuccess(() -> Component.literal("[小诺清理] 已移除白名单物品: " + itemId), true);
+            source.sendSuccess(() -> translated("command.whitelist.removed", Map.of("item", itemId)), true);
             return 1;
         }
 
-        source.sendFailure(Component.literal("[小诺清理] 白名单中没有物品: " + itemId));
+        source.sendFailure(translated("command.whitelist.missing", Map.of("item", itemId)));
         return 0;
     }
 
     private int listWhitelist(CommandSourceStack source) {
         List<String> whitelist = configManager.config().whitelist();
-        String message = whitelist.isEmpty() ? "[小诺清理] 白名单为空。" : "[小诺清理] 白名单: " + String.join(", ", whitelist);
-        source.sendSuccess(() -> Component.literal(message), false);
+        source.sendSuccess(() -> whitelist.isEmpty()
+                ? translated("command.whitelist.empty")
+                : translated("command.whitelist.list", Map.of("items", String.join(", ", whitelist))), false);
         return 1;
+    }
+
+    private Component translated(String key) {
+        return translated(key, Map.of());
+    }
+
+    private Component translated(String key, Map<String, ?> placeholders) {
+        return Component.literal(languageManager.translate(configManager.config().language(), key, placeholders));
     }
 
     static List<Integer> parseWarningSeconds(String secondsText) {

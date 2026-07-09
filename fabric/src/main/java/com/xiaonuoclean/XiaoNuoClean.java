@@ -4,6 +4,8 @@ import com.xiaonuoclean.cleanup.CleanupScheduler;
 import com.xiaonuoclean.cleanup.ItemCleanupService;
 import com.xiaonuoclean.command.XiaoNuoCleanCommand;
 import com.xiaonuoclean.config.CleanConfigManager;
+import com.xiaonuoclean.config.XiaoNuoCleanPaths;
+import com.xiaonuoclean.i18n.LanguageManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -12,8 +14,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
-
 public class XiaoNuoClean implements ModInitializer {
 	public static final String MOD_ID = "xiaonuoclean";
 
@@ -21,17 +21,21 @@ public class XiaoNuoClean implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		Path configPath = FabricLoader.getInstance().getConfigDir().resolve(MOD_ID + ".json");
-		CleanConfigManager configManager = new CleanConfigManager(configPath);
+		XiaoNuoCleanPaths paths = XiaoNuoCleanPaths.resolve(FabricLoader.getInstance().getConfigDir());
+
+		LanguageManager languageManager = new LanguageManager(paths.languageDirectory());
+		languageManager.reload();
+
+		CleanConfigManager configManager = new CleanConfigManager(paths.configPath());
 		configManager.load();
 
 		ItemCleanupService cleanupService = new ItemCleanupService();
-		CleanupScheduler scheduler = new CleanupScheduler(configManager, cleanupService);
+		CleanupScheduler scheduler = new CleanupScheduler(configManager, cleanupService, languageManager);
 		ServerTickEvents.END_SERVER_TICK.register(scheduler::tick);
 
-		XiaoNuoCleanCommand command = new XiaoNuoCleanCommand(configManager, scheduler);
+		XiaoNuoCleanCommand command = new XiaoNuoCleanCommand(configManager, scheduler, languageManager);
 		CommandRegistrationCallback.EVENT.register(command::register);
 
-		LOGGER.info("XiaoNuoClean initialized. Config path: {}", configPath);
+		LOGGER.info("XiaoNuoClean initialized. Config path: {}", paths.configPath());
 	}
 }

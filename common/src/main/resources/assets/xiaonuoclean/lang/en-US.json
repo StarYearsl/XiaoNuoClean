@@ -1,0 +1,17 @@
+{
+  "cleanup.warning": "[XiaoNuoClean] Cleaning dropped items in {seconds} seconds.",
+  "cleanup.cleaned": "[XiaoNuoClean] Cleaned {count} dropped items.",
+  "command.status": "[XiaoNuoClean] Cleanup interval: {intervalSeconds} seconds, next cleanup in {remainingSeconds} seconds, warnings: {warningSeconds}, whitelist entries: {whitelistCount}",
+  "command.reload": "[XiaoNuoClean] Config reloaded.",
+  "command.clean": "[XiaoNuoClean] Manually cleaned {count} dropped items.",
+  "command.interval.set": "[XiaoNuoClean] Cleanup interval set to {seconds} seconds.",
+  "command.warnings.invalid": "[XiaoNuoClean] Provide at least one valid positive integer warning second.",
+  "command.warnings.set": "[XiaoNuoClean] Warning seconds set to {warningSeconds}.",
+  "command.whitelist.player_only": "[XiaoNuoClean] This command can only be run by an in-game administrator player.",
+  "command.whitelist.empty_hand": "[XiaoNuoClean] Your main hand is empty.",
+  "command.whitelist.added": "[XiaoNuoClean] Added whitelist item: {item}",
+  "command.whitelist.removed": "[XiaoNuoClean] Removed whitelist item: {item}",
+  "command.whitelist.missing": "[XiaoNuoClean] Whitelist does not contain item: {item}",
+  "command.whitelist.empty": "[XiaoNuoClean] Whitelist is empty.",
+  "command.whitelist.list": "[XiaoNuoClean] Whitelist: {items}"
+}

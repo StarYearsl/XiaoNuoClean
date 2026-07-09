@@ -11,6 +11,7 @@ class CleanConfigTest {
     void createDefaultUsesFifteenMinuteIntervalAndDefaultWarnings() {
         CleanConfig config = CleanConfig.createDefault();
 
+        assertEquals("zh-CN", config.language());
         assertEquals(900, config.intervalSeconds());
         assertEquals(List.of(10, 5, 4, 3, 2, 1), config.warningSeconds());
         assertEquals(List.of(), config.whitelist());
@@ -19,6 +20,7 @@ class CleanConfigTest {
     @Test
     void normalizeReplacesInvalidIntervalAndFiltersWarningsAndWhitelist() {
         CleanConfig config = new CleanConfig(
+                "en-US",
                 -1,
                 List.of(30, 10, 10, 0, -3, 900),
                 List.of("minecraft:diamond", "bad id", "minecraft:diamond", "xiaonuoclean:kept_item")
@@ -27,13 +29,14 @@ class CleanConfigTest {
         CleanConfig normalized = config.normalize();
 
         assertEquals(900, normalized.intervalSeconds());
+        assertEquals("en-US", normalized.language());
         assertEquals(List.of(30, 10), normalized.warningSeconds());
         assertEquals(List.of("minecraft:diamond", "xiaonuoclean:kept_item"), normalized.whitelist());
     }
 
     @Test
     void normalizeUsesDefaultWarningsWhenWarningsAreMissing() {
-        CleanConfig config = new CleanConfig(5, null, List.of());
+        CleanConfig config = new CleanConfig("zh-CN", 5, null, List.of());
 
         CleanConfig normalized = config.normalize();
 
@@ -43,7 +46,7 @@ class CleanConfigTest {
 
     @Test
     void normalizeKeepsExplicitEmptyWarningsToDisableCountdownBroadcasts() {
-        CleanConfig config = new CleanConfig(5, List.of(), List.of());
+        CleanConfig config = new CleanConfig("zh-CN", 5, List.of(), List.of());
 
         CleanConfig normalized = config.normalize();
 
@@ -53,10 +56,22 @@ class CleanConfigTest {
 
     @Test
     void normalizeConvertsShorthandWhitelistItemsToMinecraftNamespace() {
-        CleanConfig config = new CleanConfig(900, List.of(10), List.of("diamond", "minecraft:netherite_ingot"));
+        CleanConfig config = new CleanConfig("zh-CN", 900, List.of(10), List.of("diamond", "minecraft:netherite_ingot"));
 
         CleanConfig normalized = config.normalize();
 
         assertEquals(List.of("minecraft:diamond", "minecraft:netherite_ingot"), normalized.whitelist());
+    }
+
+    @Test
+    void normalizeUsesDefaultLanguageWhenLanguageIsMissingOrBlank() {
+        assertEquals("zh-CN", new CleanConfig(null, 900, List.of(10), List.of()).normalize().language());
+        assertEquals("zh-CN", new CleanConfig("   ", 900, List.of(10), List.of()).normalize().language());
+    }
+
+    @Test
+    void normalizeRejectsPathLikeLanguageValues() {
+        assertEquals("zh-CN", new CleanConfig("../en-US", 900, List.of(10), List.of()).normalize().language());
+        assertEquals("zh-CN", new CleanConfig("lang\\en-US", 900, List.of(10), List.of()).normalize().language());
     }
 }

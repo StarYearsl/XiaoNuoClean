@@ -71,6 +71,12 @@ tasks.register('validateModJar') {
 			if (!entries.contains('assets/xiaonuoclean/icon.png')) {
 				throw new GradleException('Fabric jar is missing the mod icon')
 			}
+			if (!entries.contains('assets/xiaonuoclean/lang/zh-CN.json')) {
+				throw new GradleException('Fabric jar is missing the bundled zh-CN language file')
+			}
+			if (!entries.contains('assets/xiaonuoclean/lang/en-US.json')) {
+				throw new GradleException('Fabric jar is missing the bundled en-US language file')
+			}
 			if (!entries.contains('com/xiaonuoclean/cleanup/CleanupScheduler.class')) {
 				throw new GradleException('Fabric jar is missing common cleanup classes')
 			}

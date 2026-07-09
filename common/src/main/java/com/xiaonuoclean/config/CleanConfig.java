@@ -6,23 +6,41 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-public record CleanConfig(int intervalSeconds, List<Integer> warningSeconds, List<String> whitelist) {
+public record CleanConfig(String language, int intervalSeconds, List<Integer> warningSeconds, List<String> whitelist) {
+    public static final String DEFAULT_LANGUAGE = "zh-CN";
     public static final int DEFAULT_INTERVAL_SECONDS = 15 * 60;
     public static final List<Integer> DEFAULT_WARNING_SECONDS = List.of(10, 5, 4, 3, 2, 1);
 
+    private static final Pattern LANGUAGE_PATTERN = Pattern.compile("[A-Za-z0-9_.-]+");
     private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
     private static final Pattern PATH_PATTERN = Pattern.compile("[a-z0-9_./-]+");
 
     public static CleanConfig createDefault() {
-        return new CleanConfig(DEFAULT_INTERVAL_SECONDS, DEFAULT_WARNING_SECONDS, List.of());
+        return new CleanConfig(DEFAULT_LANGUAGE, DEFAULT_INTERVAL_SECONDS, DEFAULT_WARNING_SECONDS, List.of());
     }
 
     public CleanConfig normalize() {
+        String normalizedLanguage = normalizeLanguage(language);
         int normalizedIntervalSeconds = intervalSeconds > 0 ? intervalSeconds : DEFAULT_INTERVAL_SECONDS;
         List<Integer> normalizedWarnings = normalizeWarnings(normalizedIntervalSeconds, warningSeconds);
         List<String> normalizedWhitelist = normalizeWhitelist(whitelist);
 
-        return new CleanConfig(normalizedIntervalSeconds, normalizedWarnings, normalizedWhitelist);
+        return new CleanConfig(normalizedLanguage, normalizedIntervalSeconds, normalizedWarnings, normalizedWhitelist);
+    }
+
+    public static String normalizeLanguage(String language) {
+        if (language == null) {
+            return DEFAULT_LANGUAGE;
+        }
+
+        String trimmedLanguage = language.trim();
+        if (trimmedLanguage.isEmpty()
+                || trimmedLanguage.contains("..")
+                || !LANGUAGE_PATTERN.matcher(trimmedLanguage).matches()) {
+            return DEFAULT_LANGUAGE;
+        }
+
+        return trimmedLanguage;
     }
 
     private static List<Integer> normalizeWarnings(int intervalSeconds, List<Integer> warnings) {
