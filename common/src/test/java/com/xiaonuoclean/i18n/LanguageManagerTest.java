@@ -96,4 +96,14 @@ class LanguageManagerTest {
 
         assertEquals("unknown.key", message);
     }
+
+    @Test
+    void loadsLocalizedAutomaticCleanupMessages() {
+        LanguageManager manager = new LanguageManager(tempDir.resolve("lang"));
+
+        assertEquals("[小诺清理] 定时清理已关闭。", manager.translate("zh-CN", "command.clean.disabled"));
+        assertEquals("[XiaoNuoClean] Automatic cleanup enabled.", manager.translate("en-US", "command.clean.enabled"));
+        assertEquals("开启", manager.translate("zh-CN", "state.enabled"));
+        assertEquals("Disabled", manager.translate("en-US", "state.disabled"));
+    }
 }

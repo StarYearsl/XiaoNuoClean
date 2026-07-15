@@ -53,7 +53,11 @@ public class XiaoNuoCleanCommand {
                 .then(Commands.literal("reload")
                         .executes(command -> reload(command.getSource())))
                 .then(Commands.literal("clean")
-                        .executes(command -> clean(command.getSource())))
+                        .executes(command -> clean(command.getSource()))
+                        .then(Commands.literal("on")
+                                .executes(command -> setAutomaticCleanup(command.getSource(), true)))
+                        .then(Commands.literal("off")
+                                .executes(command -> setAutomaticCleanup(command.getSource(), false))))
                 .then(Commands.literal("interval")
                         .then(Commands.argument("seconds", IntegerArgumentType.integer(1))
                                 .executes(command -> setInterval(
@@ -98,6 +102,7 @@ public class XiaoNuoCleanCommand {
     private int status(CommandSourceStack source) {
         CleanConfig config = configManager.config();
         source.sendSuccess(() -> translated("command.status", Map.of(
+                "enabledStatus", translatedText(Boolean.TRUE.equals(config.enabled()) ? "state.enabled" : "state.disabled"),
                 "intervalSeconds", config.intervalSeconds(),
                 "remainingSeconds", scheduler.remainingSeconds(),
                 "warningSeconds", config.warningSeconds(),
@@ -120,9 +125,21 @@ public class XiaoNuoCleanCommand {
         return 1;
     }
 
+    private int setAutomaticCleanup(CommandSourceStack source, boolean enabled) {
+        CleanConfig current = configManager.config();
+        if (Boolean.TRUE.equals(current.enabled()) != enabled) {
+            configManager.save(current.withEnabled(enabled));
+            scheduler.refresh();
+        }
+
+        String messageKey = enabled ? "command.clean.enabled" : "command.clean.disabled";
+        source.sendSuccess(() -> translated(messageKey), true);
+        return 1;
+    }
+
     private int setInterval(CommandSourceStack source, int seconds) {
         CleanConfig current = configManager.config();
-        CleanConfig updated = new CleanConfig(current.language(), seconds, current.warningSeconds(), current.whitelist()).normalize();
+        CleanConfig updated = current.withIntervalSeconds(seconds);
         configManager.save(updated);
         scheduler.refresh();
         source.sendSuccess(() -> translated("command.interval.set", Map.of("seconds", updated.intervalSeconds())), true);
@@ -137,7 +154,7 @@ public class XiaoNuoCleanCommand {
         }
 
         CleanConfig current = configManager.config();
-        CleanConfig updated = new CleanConfig(current.language(), current.intervalSeconds(), warnings, current.whitelist()).normalize();
+        CleanConfig updated = current.withWarningSeconds(warnings);
         configManager.save(updated);
         scheduler.refresh();
         source.sendSuccess(() -> translated("command.warnings.set", Map.of("warningSeconds", updated.warningSeconds())), true);
@@ -169,7 +186,7 @@ public class XiaoNuoCleanCommand {
             whitelist.add(itemId);
         }
 
-        CleanConfig updated = new CleanConfig(current.language(), current.intervalSeconds(), current.warningSeconds(), whitelist).normalize();
+        CleanConfig updated = current.withWhitelist(whitelist);
         configManager.save(updated);
         scheduler.refresh();
         source.sendSuccess(() -> translated("command.whitelist.added", Map.of("item", itemId)), true);
@@ -181,7 +198,7 @@ public class XiaoNuoCleanCommand {
         List<String> whitelist = current.mutableWhitelist();
         boolean removed = whitelist.remove(itemId);
 
-        CleanConfig updated = new CleanConfig(current.language(), current.intervalSeconds(), current.warningSeconds(), whitelist).normalize();
+        CleanConfig updated = current.withWhitelist(whitelist);
         configManager.save(updated);
         scheduler.refresh();
 
@@ -207,7 +224,15 @@ public class XiaoNuoCleanCommand {
     }
 
     private Component translated(String key, Map<String, ?> placeholders) {
-        return Component.literal(languageManager.translate(configManager.config().language(), key, placeholders));
+        return Component.literal(translatedText(key, placeholders));
+    }
+
+    private String translatedText(String key) {
+        return translatedText(key, Map.of());
+    }
+
+    private String translatedText(String key, Map<String, ?> placeholders) {
+        return languageManager.translate(configManager.config().language(), key, placeholders);
     }
 
     static List<Integer> parseWarningSeconds(String secondsText) {

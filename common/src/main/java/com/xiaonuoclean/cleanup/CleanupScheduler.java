@@ -37,6 +37,10 @@ public class CleanupScheduler {
 
     public void tick(MinecraftServer server) {
         CleanConfig config = configManager.config();
+        if (!Boolean.TRUE.equals(config.enabled())) {
+            return;
+        }
+
         countdown.tick(event -> {
             if (event instanceof CleanupCountdown.Warning warning) {
                 broadcast(server, CleanupMessages.warning(languageManager, config.language(), warning.remainingSeconds()));

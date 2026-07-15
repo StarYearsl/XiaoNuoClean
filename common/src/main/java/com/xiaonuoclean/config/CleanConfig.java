@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-public record CleanConfig(String language, int intervalSeconds, List<Integer> warningSeconds, List<String> whitelist) {
+public record CleanConfig(String language, Boolean enabled, int intervalSeconds, List<Integer> warningSeconds, List<String> whitelist) {
     public static final String DEFAULT_LANGUAGE = "zh-CN";
     public static final int DEFAULT_INTERVAL_SECONDS = 15 * 60;
     public static final List<Integer> DEFAULT_WARNING_SECONDS = List.of(10, 5, 4, 3, 2, 1);
@@ -16,16 +16,33 @@ public record CleanConfig(String language, int intervalSeconds, List<Integer> wa
     private static final Pattern PATH_PATTERN = Pattern.compile("[a-z0-9_./-]+");
 
     public static CleanConfig createDefault() {
-        return new CleanConfig(DEFAULT_LANGUAGE, DEFAULT_INTERVAL_SECONDS, DEFAULT_WARNING_SECONDS, List.of());
+        return new CleanConfig(DEFAULT_LANGUAGE, true, DEFAULT_INTERVAL_SECONDS, DEFAULT_WARNING_SECONDS, List.of());
     }
 
     public CleanConfig normalize() {
         String normalizedLanguage = normalizeLanguage(language);
+        boolean normalizedEnabled = enabled == null || enabled;
         int normalizedIntervalSeconds = intervalSeconds > 0 ? intervalSeconds : DEFAULT_INTERVAL_SECONDS;
         List<Integer> normalizedWarnings = normalizeWarnings(normalizedIntervalSeconds, warningSeconds);
         List<String> normalizedWhitelist = normalizeWhitelist(whitelist);
 
-        return new CleanConfig(normalizedLanguage, normalizedIntervalSeconds, normalizedWarnings, normalizedWhitelist);
+        return new CleanConfig(normalizedLanguage, normalizedEnabled, normalizedIntervalSeconds, normalizedWarnings, normalizedWhitelist);
+    }
+
+    public CleanConfig withEnabled(boolean enabled) {
+        return new CleanConfig(language, enabled, intervalSeconds, warningSeconds, whitelist).normalize();
+    }
+
+    public CleanConfig withIntervalSeconds(int intervalSeconds) {
+        return new CleanConfig(language, enabled, intervalSeconds, warningSeconds, whitelist).normalize();
+    }
+
+    public CleanConfig withWarningSeconds(List<Integer> warningSeconds) {
+        return new CleanConfig(language, enabled, intervalSeconds, warningSeconds, whitelist).normalize();
+    }
+
+    public CleanConfig withWhitelist(List<String> whitelist) {
+        return new CleanConfig(language, enabled, intervalSeconds, warningSeconds, whitelist).normalize();
     }
 
     public static String normalizeLanguage(String language) {

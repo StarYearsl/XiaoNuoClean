@@ -25,6 +25,7 @@ class CleanConfigManagerTest {
         assertTrue(Files.exists(configPath));
         String content = Files.readString(configPath);
         assertTrue(content.contains("\"language\": \"zh-CN\""));
+        assertTrue(content.contains("\"enabled\": true"));
         assertTrue(content.contains("\"intervalSeconds\": 900"));
     }
 
@@ -45,6 +46,7 @@ class CleanConfigManagerTest {
         CleanConfig config = manager.load();
 
         assertEquals("zh-CN", config.language());
+        assertEquals(true, config.enabled());
         assertEquals(4, config.intervalSeconds());
         assertEquals(List.of(3, 2), config.warningSeconds());
         assertEquals(List.of("minecraft:diamond"), config.whitelist());
@@ -69,10 +71,11 @@ class CleanConfigManagerTest {
         Path configPath = tempDir.resolve("nested").resolve("xiaonuoclean.json");
         CleanConfigManager manager = new CleanConfigManager(configPath);
 
-        manager.save(new CleanConfig("en-US", 30, List.of(10, 5), List.of("minecraft:diamond")));
+        manager.save(new CleanConfig("en-US", false, 30, List.of(10, 5), List.of("minecraft:diamond")));
         CleanConfig loaded = manager.load();
 
         assertEquals("en-US", loaded.language());
+        assertEquals(false, loaded.enabled());
         assertEquals(30, loaded.intervalSeconds());
         assertEquals(List.of(10, 5), loaded.warningSeconds());
         assertEquals(List.of("minecraft:diamond"), loaded.whitelist());

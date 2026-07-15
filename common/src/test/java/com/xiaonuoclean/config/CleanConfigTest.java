@@ -12,6 +12,7 @@ class CleanConfigTest {
         CleanConfig config = CleanConfig.createDefault();
 
         assertEquals("zh-CN", config.language());
+        assertEquals(true, config.enabled());
         assertEquals(900, config.intervalSeconds());
         assertEquals(List.of(10, 5, 4, 3, 2, 1), config.warningSeconds());
         assertEquals(List.of(), config.whitelist());
@@ -21,6 +22,7 @@ class CleanConfigTest {
     void normalizeReplacesInvalidIntervalAndFiltersWarningsAndWhitelist() {
         CleanConfig config = new CleanConfig(
                 "en-US",
+                false,
                 -1,
                 List.of(30, 10, 10, 0, -3, 900),
                 List.of("minecraft:diamond", "bad id", "minecraft:diamond", "xiaonuoclean:kept_item")
@@ -30,13 +32,14 @@ class CleanConfigTest {
 
         assertEquals(900, normalized.intervalSeconds());
         assertEquals("en-US", normalized.language());
+        assertEquals(false, normalized.enabled());
         assertEquals(List.of(30, 10), normalized.warningSeconds());
         assertEquals(List.of("minecraft:diamond", "xiaonuoclean:kept_item"), normalized.whitelist());
     }
 
     @Test
     void normalizeUsesDefaultWarningsWhenWarningsAreMissing() {
-        CleanConfig config = new CleanConfig("zh-CN", 5, null, List.of());
+        CleanConfig config = new CleanConfig("zh-CN", true, 5, null, List.of());
 
         CleanConfig normalized = config.normalize();
 
@@ -46,7 +49,7 @@ class CleanConfigTest {
 
     @Test
     void normalizeKeepsExplicitEmptyWarningsToDisableCountdownBroadcasts() {
-        CleanConfig config = new CleanConfig("zh-CN", 5, List.of(), List.of());
+        CleanConfig config = new CleanConfig("zh-CN", true, 5, List.of(), List.of());
 
         CleanConfig normalized = config.normalize();
 
@@ -56,7 +59,7 @@ class CleanConfigTest {
 
     @Test
     void normalizeConvertsShorthandWhitelistItemsToMinecraftNamespace() {
-        CleanConfig config = new CleanConfig("zh-CN", 900, List.of(10), List.of("diamond", "minecraft:netherite_ingot"));
+        CleanConfig config = new CleanConfig("zh-CN", true, 900, List.of(10), List.of("diamond", "minecraft:netherite_ingot"));
 
         CleanConfig normalized = config.normalize();
 
@@ -65,13 +68,29 @@ class CleanConfigTest {
 
     @Test
     void normalizeUsesDefaultLanguageWhenLanguageIsMissingOrBlank() {
-        assertEquals("zh-CN", new CleanConfig(null, 900, List.of(10), List.of()).normalize().language());
-        assertEquals("zh-CN", new CleanConfig("   ", 900, List.of(10), List.of()).normalize().language());
+        assertEquals("zh-CN", new CleanConfig(null, true, 900, List.of(10), List.of()).normalize().language());
+        assertEquals("zh-CN", new CleanConfig("   ", true, 900, List.of(10), List.of()).normalize().language());
     }
 
     @Test
     void normalizeRejectsPathLikeLanguageValues() {
-        assertEquals("zh-CN", new CleanConfig("../en-US", 900, List.of(10), List.of()).normalize().language());
-        assertEquals("zh-CN", new CleanConfig("lang\\en-US", 900, List.of(10), List.of()).normalize().language());
+        assertEquals("zh-CN", new CleanConfig("../en-US", true, 900, List.of(10), List.of()).normalize().language());
+        assertEquals("zh-CN", new CleanConfig("lang\\en-US", true, 900, List.of(10), List.of()).normalize().language());
+    }
+
+    @Test
+    void normalizeDefaultsMissingEnabledValueToTrueAndPreservesFalse() {
+        assertEquals(true, new CleanConfig("zh-CN", null, 900, List.of(10), List.of()).normalize().enabled());
+        assertEquals(false, new CleanConfig("zh-CN", false, 900, List.of(10), List.of()).normalize().enabled());
+    }
+
+    @Test
+    void configUpdatesPreserveDisabledState() {
+        CleanConfig config = new CleanConfig("en-US", false, 900, List.of(10), List.of("minecraft:diamond")).normalize();
+
+        assertEquals(false, config.withIntervalSeconds(1800).enabled());
+        assertEquals(false, config.withWarningSeconds(List.of(30)).enabled());
+        assertEquals(false, config.withWhitelist(List.of("minecraft:emerald")).enabled());
+        assertEquals(true, config.withEnabled(true).enabled());
     }
 }
